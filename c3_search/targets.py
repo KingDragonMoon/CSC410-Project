@@ -8,6 +8,7 @@ from c1_checker.checker import ProofLine
 from c3_search.initialization import (
     CORE_AXIOM_ARITIES,
     _iter_conjuncts,
+    initialize_axioms,
     match_axiom_antecedent,
     match_axiom_conjuncts,
     match_axiom_conclusion,
@@ -34,6 +35,11 @@ def target_strategies(goal: Formula) -> Iterator[Strategy]:
             )
 
     if isinstance(goal, Implies):
+        for axiom in initialize_axioms((
+            Iff(goal.left, goal.right),
+            Iff(goal.right, goal.left),
+        )):
+            yield Strategy((axiom.formula,), "R1")
         seen_instances: set[Formula] = set()
         for antecedent in chain((goal.left,), _iter_conjuncts(goal.left)):
             for axiom_name, _ in CORE_AXIOM_ARITIES:
@@ -60,6 +66,7 @@ def target_strategies(goal: Formula) -> Iterator[Strategy]:
         yield Strategy((Not(goal.left),), "R1")
         yield Strategy((goal.right,), "R1")
     elif isinstance(goal, Iff):
+        yield Strategy((Iff(goal.right, goal.left),), "R1")
         yield Strategy((Implies(goal.left, goal.right), Implies(goal.right, goal.left)), "R1")
 
     for axiom_name, _ in CORE_AXIOM_ARITIES:
