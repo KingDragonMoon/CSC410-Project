@@ -1,0 +1,19 @@
+- Selection criteria: exercise distinct paths through `target_strategies`, including antecedent matching, conjunction splitting, disjunction alternatives, implication consequents, equivalence reversal, and R3. Include direct axiom and R1 checks as baselines.
+- Include a deeply nested goal that combines supported paths, plus simple valid goals and assignment examples that need intermediate formulas our strategies do not discover. These examples are representative, not exhaustive branch coverage.
+- Search can construct and check tautologies that combine selected premises into a target. It does not freely propose helpful intermediate formulas or rewrite temporal expressions inside a goal. The failures below expose these missing strategies; they do not mean the formulas are invalid.
+- `propositional_identity`: passes because `p ⊃ p` is an R1 tautology.
+- `next_negation`: passes by matching A3 directly.
+- `reversed_next_negation`: passes by reversing the equivalence, matching A3, and combining through R1 and R2.
+- `eventually_conjunction_duality`: passes by matching A1 with a conjunction substituted for its proposition.
+- `always_now`: passes by matching A5's antecedent and extracting its present-time consequence through R1 and R2.
+- `now_implies_eventually`: `p ⊃ ◇p` says that something true now is also true at some time from now onward. Our implication strategy tries proving `¬p` or `◇p` on its own, but neither is always true. It misses the connection between them: if `p` holds now, then `¬p` cannot hold always. Using that connection requires rewriting `◇p` as `¬□¬p`, which search does not automatically do inside this implication.
+- `temporal_disjunction`: passes by proving the right disjunct through A5 after the left disjunct fails.
+- `temporal_implication`: passes by proving the consequent independently through A5.
+- `temporal_contradiction`: passes by matching the boxed antecedent conjunct to A5, exposing a contradiction for R1 and R2.
+- `temporal_equivalence`: passes by proving both implications using A5 and propositional reasoning, then combining them into an equivalence.
+- `next_conjunction_projection`: passes through A4, with its next-wrapped tautology obtained using R3 and A5's next conjunct.
+- `nested_temporal_consequences`: passes by combining nested conjunction projections through A2, A4, and A5, then applying R3 twice. The checked proof has 22 lines.
+- `assignment_eventually_monotonicity`: the goal relates two eventualities, while A2 tells us how to relate two always statements. A proof can connect them by expressing eventuality as "not always not" and turning `p ⊃ q` into `¬q ⊃ ¬p`. Search does not propose those rewrites, so it never reaches the form where A2 helps.
+- `always_distribution_forward`: passes by splitting the conjunctive consequent into two implications, each proved through A2 and R3.
+- `always_distribution_backward`: search can split a conjunction outside a temporal operator, but it has no strategy for combining `□p` and `□q` into `□(p ∧ q)`. A proof needs the helper tautology `p ⊃ (q ⊃ (p ∧ q))`, then R3 and two uses of A2. Search can verify that tautology if given it, but does not generate it as a useful helper here.
+- `assignment_always_distributes_over_conjunction`: proving the equivalence requires both directions. Extracting `□p` and `□q` from `□(p ∧ q)` succeeds, but putting them back together needs the missing strategy described in `always_distribution_backward`. One successful direction is not enough.
